@@ -3,7 +3,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 
 # This will be pulled from your .env later
-DATABASE_URL = "postgresql://postgres:clot_db@localhost:5432/postgres"
+DATABASE_URL = "postgresql://postgres:clot_db@localhost:5432/ecommerce_db"
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

@@ -10,18 +10,6 @@ class StaticReview(BaseModel):
     date: Optional[str] = None  # Or use datetime
 
 
-class CategoryBase(BaseModel):
-    name: str
-    image_url: Optional[str] = None
-
-
-class CategoryOut(CategoryBase):
-    id: int
-
-    class Config:
-        from_attributes = True
-
-
 class ProductOut(BaseModel):
     id: int
     name: str

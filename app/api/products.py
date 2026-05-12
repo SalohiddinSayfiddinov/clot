@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, status
 from typing import Optional, List
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from app.db.session import get_db
+from app.models.category import Category
 from app.models.product import Product, CartItem
 from app.models.user import Wishlist, User
 from app.core.security import get_current_user, get_optional_current_user
@@ -78,10 +79,23 @@ def get_products(
 
 @router.post("/create", response_model=ProductOut)
 def create_product(product_in: ProductCreate, db: Session = Depends(get_db)):
+    category = db.query(Category).filter(Category.id == product_in.category_id).first()
+
+    if not category:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Category with id {product_in.category_id} does not exist.",
+        )
+
     new_product = Product(**product_in.model_dump())
     db.add(new_product)
-    db.commit()
-    db.refresh(new_product)
+    try:
+        db.commit()
+        db.refresh(new_product)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Could not create product")
+
     return new_product
 
 
@@ -109,6 +123,31 @@ def delete_product(product_id: int, db: Session = Depends(get_db)):
     return {"message": "Product deleted"}
 
 
+@router.post("/{product_id}/wishlist-toggle")
+def toggle_wishlist(
+    product_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    # Check if it's already there
+    item = (
+        db.query(Wishlist)
+        .filter(Wishlist.user_id == current_user.id, Wishlist.product_id == product_id)
+        .first()
+    )
+
+    if item:
+        db.delete(item)
+        db.commit()
+        return {"is_wishlisted": False, "message": "Removed from wishlist"}
+
+    # Otherwise, add it
+    new_item = Wishlist(user_id=current_user.id, product_id=product_id)
+    db.add(new_item)
+    db.commit()
+    return {"is_wishlisted": True, "message": "Added to wishlist"}
+
+
 @router.post("/cart/add")
 def add_to_cart(
     product_id: int,
@@ -132,8 +171,15 @@ def add_to_cart(
 
 
 @router.get("/cart", response_model=List[CartItemOut])
-def get_my_cart(current_user: User = Depends(get_current_user)):
-    return current_user.cart_items
+def get_my_cart(
+    db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
+):
+    return (
+        db.query(CartItem)
+        .join(Product)
+        .filter(CartItem.user_id == current_user.id)
+        .all()
+    )
 
 
 @router.patch("/cart/{cart_item_id}/quantity")

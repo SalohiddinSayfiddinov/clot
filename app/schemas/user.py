@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import List, Optional
 from enum import Enum
 
 
@@ -29,9 +29,17 @@ class UserLogin(BaseModel):
 
 class UserOut(BaseModel):
     id: int
-    email: EmailStr
     first_name: str
     last_name: str
+    email: str
+    phone: Optional[str] = None
+    image_url: Optional[str] = None
+    gender: Optional[str] = None
+    age: Optional[str] = None
+
+    # Nested lists
+    addresses: List[AddressOut] = []
+    cards: List[CardOut] = []
 
     model_config = {"from_attributes": True}
 
@@ -43,9 +51,12 @@ class AddressBase(BaseModel):
     zip_code: str
 
 
-class AddressOut(AddressBase):
+class AddressOut(BaseModel):
     id: int
-
+    street: str
+    city: str
+    state: str
+    zip_code: str
     model_config = {"from_attributes": True}
 
 
@@ -54,6 +65,15 @@ class CardBase(BaseModel):
     ccv: str
     exp: str
     cardholder_name: str
+
+
+class CardOut(BaseModel):
+    id: int
+    card_number: str
+    exp: str
+    ccv: str
+    cardholder_name: str
+    model_config = {"from_attributes": True}
 
 
 class UserUpdate(BaseModel):

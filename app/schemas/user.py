@@ -27,23 +27,6 @@ class UserLogin(BaseModel):
     password: str
 
 
-class UserOut(BaseModel):
-    id: int
-    first_name: str
-    last_name: str
-    email: str
-    phone: Optional[str] = None
-    image_url: Optional[str] = None
-    gender: Optional[str] = None
-    age: Optional[str] = None
-
-    # Nested lists
-    addresses: List[AddressOut] = []
-    cards: List[CardOut] = []
-
-    model_config = {"from_attributes": True}
-
-
 class AddressBase(BaseModel):
     street: str
     city: str
@@ -83,3 +66,20 @@ class UserUpdate(BaseModel):
     image_url: Optional[str] = None
     gender: Optional[str] = None
     age: Optional[str] = None
+
+
+class UserOut(BaseModel):
+    id: int
+    first_name: str
+    last_name: str
+    email: str
+    phone: Optional[str] = None
+    image_url: Optional[str] = None
+    gender: Optional[str] = None
+    age: Optional[str] = None
+
+    # Nested lists
+    addresses: List[AddressOut] = []
+    cards: List[CardOut] = []
+
+    model_config = {"from_attributes": True}

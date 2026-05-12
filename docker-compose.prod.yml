@@ -1,0 +1,36 @@
+services:
+  # Database Service
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: clot_db
+      POSTGRES_DB: ecommerce_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend_network
+
+  # FastAPI Application
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    restart: always
+    environment:
+      # Note: 'db' replaces 'localhost'
+      DATABASE_URL: postgresql://postgres:clot_db@db:5432/ecommerce_db
+    depends_on:
+      - db
+    networks:
+      - backend_network
+    ports:
+      - "8000:8000"
+
+networks:
+  backend_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
